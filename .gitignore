@@ -1,0 +1,299 @@
+# General
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.log
+*.tmp
+*.temp
+*~
+
+# IDE and Editor files
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# C# / .NET Backend
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+
+## .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## Visual Studio
+.vs/
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+## Visual Studio Trace Files
+*.e2e
+
+## TFS 2012 Local Workspace
+$tf/
+
+## ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+## DotCover
+*.dotCover
+
+## NCrunch
+_NCrunch_*
+.*crunch*.local.xml
+nCrunchTemp_*
+
+## MightyMoose
+*.mm.*
+AutoTest.Net/
+
+## Installshield output folder
+[Ee]xpress/
+
+## DocProject
+DocProject/buildhelp/
+DocProject/Help/*.HxT
+DocProject/Help/*.HxC
+DocProject/Help/*.hhc
+DocProject/Help/*.hhk
+DocProject/Help/*.hhp
+DocProject/Help/Html2
+DocProject/Help/html
+
+## Publish profiles
+PublishProfiles/
+
+## Database
+*.mdf
+*.ldf
+*.ndf
+
+## NuGet Packages
+*.nupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+packages.config
+
+# React / Node.js Frontend
+## Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+## Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+## Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+## nyc test coverage
+.nyc_output
+
+## Grunt intermediate storage
+.grunt
+
+## Bower dependency directory
+bower_components
+
+## node-waf configuration
+.lock-wscript
+
+## Compiled binary addons
+build/Release
+
+## Dependency directories
+node_modules/
+jspm_packages/
+
+## Snowpack dependency directory
+web_modules/
+
+## TypeScript cache
+*.tsbuildinfo
+
+## Optional npm cache directory
+.npm
+
+## Optional eslint cache
+.eslintcache
+
+## Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+## Optional REPL history
+.node_repl_history
+
+## Output of 'npm pack'
+*.tgz
+
+## Yarn Integrity file
+.yarn-integrity
+
+## dotenv environment variables file
+.env
+.env.test
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+## parcel-bundler cache
+.cache
+.parcel-cache
+
+## Next.js build output
+.next
+
+## Nuxt.js build / generate output
+.nuxt
+dist
+
+## Gatsby files
+.cache/
+public
+
+## Storybook build outputs
+.out
+.storybook-out
+
+## Rollup.js default build output
+dist/
+
+## Uncomment this if you have a yarn.lock file and you want to track it
+# yarn.lock
+
+## React build output
+/build
+
+# Database Files
+## RavenDB
+**/RavenData/
+**/Raven.Database/
+**/App_Data/
+
+## SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea
+*.swp
+*.swo
+
+# Project specific
+## Ignore compiled output
+/backend/HRAssistant/bin/
+/backend/HRAssistant/obj/
+/frontend/hr-assistant/build/
+/frontend/hr-assistant/node_modules/
+
+## Configuration files with secrets
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+
+## Package manager files
+package-lock.json
+yarn.lock
+
+# Backup files
+*.bak
+*.backup
