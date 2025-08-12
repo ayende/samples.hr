@@ -7,6 +7,7 @@ public class Employee
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Department { get; set; } = string.Empty;
+    public string DepartmentId { get; set; } = string.Empty;
     public string EmploymentType { get; set; } = string.Empty; // full-time, part-time
     public DateTime HireDate { get; set; }
     public bool CriticalRole { get; set; }

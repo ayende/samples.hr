@@ -414,9 +414,7 @@ Please select your employee profile from the dropdown in the header above to get
       setIsLoading(true);
 
       try {
-        // Load existing chat history
-        const cleanEmployeeId = employee.id.replace('employees/', '');
-        const historyResponse = await hrApi.getChatHistory(cleanEmployeeId);
+        const historyResponse = await hrApi.getChatHistory(employee.id);
 
         // Set the chat ID from the response
         setChatId(historyResponse.chatId);
@@ -488,7 +486,7 @@ Hello, **${employee.name}**, how can I help you today?`,
       const request: ChatRequest = {
         chatId: chatId || undefined,
         message: inputMessage,
-        employeeId: selectedEmployee.id.replace('employees/', ''),
+        employeeId: selectedEmployee.id,
       };
 
       const response: ChatResponse = await hrApi.chat(request);
