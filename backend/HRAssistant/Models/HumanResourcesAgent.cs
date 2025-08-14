@@ -17,6 +17,11 @@ public static class HumanResourcesAgent
         required public string Priority { get; set; }
     }
 
+    public class SignDocumentArgs
+    {
+        required public string Document { get; set; }
+    }
+
     public static Task Create(IDocumentStore store)
     {
         return store.AI.CreateAgentAsync(
@@ -74,28 +79,39 @@ Do NOT discuss non-HR topics. Answer only for the current employee.
                     limit 5",
                     ParametersSampleObject = "{\"startDate\": \"yyyy-MM-dd\", \"endDate\": \"yyyy-MM-dd\"}"
                 },
-new AiAgentToolQuery
-{
-    Name = "FindIssues",
-    Description = "Semantic search for employee's issues",
-    Query = @"
-    from HRIssues
-    where EmployeeId = $employeeId 
-        and (vector.search(embedding.text(Title), $query) or vector.search(embedding.text(Description), $query))
-    order by SubmittedDate desc
-    limit 5",
-    ParametersSampleObject = "{\"query\": [\"query terms to find matching issue\"]}"
-},
-new AiAgentToolQuery
-{
-    Name = "FindPolicies",
-    Description = "Semantic search for employer's policies",
-    Query = @"
-    from HRPolicies
-    where (vector.search(embedding.text(Title), $query) or vector.search(embedding.text(Content), $query))
-    limit 5",
-    ParametersSampleObject = "{\"query\": [\"query terms to find matching issue\"]}"
-},
+                new AiAgentToolQuery
+                {
+                    Name = "FindIssues",
+                    Description = "Semantic search for employee's issues",
+                    Query = @"
+                    from HRIssues
+                    where EmployeeId = $employeeId 
+                        and (vector.search(embedding.text(Title), $query) or vector.search(embedding.text(Description), $query))
+                    order by SubmittedDate desc
+                    limit 5",
+                    ParametersSampleObject = "{\"query\": [\"query terms to find matching issue\"]}"
+                },
+                new AiAgentToolQuery
+                {
+                    Name = "FindPolicies",
+                    Description = "Semantic search for employer's policies",
+                    Query = @"
+                    from HRPolicies
+                    where (vector.search(embedding.text(Title), $query) or vector.search(embedding.text(Content), $query))
+                    limit 5",
+                    ParametersSampleObject = "{\"query\": [\"query terms to find matching issue\"]}"
+                },
+                new AiAgentToolQuery
+                {
+                    Name = "FindDocumentsToSign",
+                    Description = "Semantic search for documents that need to be signed by the employee",
+                    Query = @"
+                    from SignatureDocuments
+                    where vector.search(embedding.text(Title), $query)
+                    select id(), Title
+                    limit 5",
+                    ParametersSampleObject = "{\"query\": [\"query terms to find matching document\"]}"
+                },
             ],
               Actions = [
                 new AiAgentToolAction
@@ -107,6 +123,14 @@ new AiAgentToolQuery
                         Category = "Payroll | Facilities | Onboarding | Benefits",
                         Description = "Full description, with all relevant context",
                         Priority = "Low | Medium | High | Critical"
+                    })
+                },
+                new AiAgentToolAction
+                {
+                    Name = "SignDocument",
+                    Description = "Asks the employee to sign a document",
+                    ParametersSampleObject = JsonConvert.SerializeObject(new SignDocumentArgs{
+                        Document = "unique-document-id (take from FindDocumentsToSign) ",
                     })
                 },
             ]

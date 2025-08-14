@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import ReactMarkdown from 'react-markdown';
 import { theme } from '../theme';
-import { hrApi, ChatRequest, ChatResponse, ChatHistoryResponse, Employee } from '../api';
+import { hrApi, ChatRequest, ChatResponse, ChatHistoryResponse, Employee, EmployeeDropdown, SignatureDocumentRequest, SignDocumentRequest } from '../api';
+import { SignatureDialog } from './SignatureDialog';
 
 interface Message {
   id: string;
@@ -164,16 +165,16 @@ const MessagesContainer = styled.div`
   background: ${theme.colors.background.secondary};
 `;
 
-const MessageBubble = styled.div<{ isUser: boolean }>`
+const MessageBubble = styled.div<{ $isUser: boolean }>`
   max-width: 75%;
   margin: ${theme.spacing.md} 0;
   padding: ${theme.spacing.lg};
   border-radius: ${theme.borderRadius.large};
-  align-self: ${props => props.isUser ? 'flex-end' : 'flex-start'};
-  margin-left: ${props => props.isUser ? 'auto' : '0'};
-  margin-right: ${props => props.isUser ? '0' : 'auto'};
+  align-self: ${props => props.$isUser ? 'flex-end' : 'flex-start'};
+  margin-left: ${props => props.$isUser ? 'auto' : '0'};
+  margin-right: ${props => props.$isUser ? '0' : 'auto'};
   
-  ${props => props.isUser ? `
+  ${props => props.$isUser ? `
     background: linear-gradient(135deg, ${theme.colors.primary.main}, ${theme.colors.primary.dark});
     color: white;
     border-bottom-right-radius: ${theme.borderRadius.small};
@@ -362,11 +363,22 @@ const LoadingIndicator = styled.div`
 export const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [employees, setEmployees] = useState<EmployeeDropdown[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeDropdown | null>(null);
   const [isEmployeeSelected, setIsEmployeeSelected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingEmployees, setIsLoadingEmployees] = useState(true);
   const [chatId, setChatId] = useState<string | null>(null);
+  const [signatureDialog, setSignatureDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    resolve?: (result: { signature: string | null; confirmed: boolean }) => void;
+  }>({
+    isOpen: false,
+    title: '',
+    description: ''
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -381,10 +393,13 @@ export const ChatInterface: React.FC = () => {
     // Load employees for dropdown
     const loadEmployees = async () => {
       try {
-        const employeeData = await hrApi.getEmployees();
+        setIsLoadingEmployees(true);
+        const employeeData = await hrApi.getEmployeesForDropdown();
         setEmployees(employeeData);
       } catch (error) {
         console.error('Error loading employees:', error);
+      } finally {
+        setIsLoadingEmployees(false);
       }
     };
 
@@ -468,9 +483,42 @@ Hello, **${employee.name}**, how can I help you today?`,
     }
   };
 
+  // Function to request signature - can be called from handleSendMessage
+  // Usage: const result = await requestSignature("Title", "Description");
+  // Returns: { signature: string | null, confirmed: boolean }
+  const requestSignature = async (title: string, description: string): Promise<{ signature: string | null; confirmed: boolean }> => {
+    return new Promise((resolve) => {
+      setSignatureDialog({
+        isOpen: true,
+        title,
+        description,
+        resolve
+      });
+    });
+  };
+
+  const handleSignatureConfirm = (signature: string) => {
+    setSignatureDialog(prev => {
+      if (prev.resolve) {
+        prev.resolve({ signature, confirmed: true });
+      }
+      return { ...prev, isOpen: false };
+    });
+  };
+
+  const handleSignatureCancel = () => {
+    setSignatureDialog(prev => {
+      if (prev.resolve) {
+        prev.resolve({ signature: null, confirmed: false });
+      }
+      return { ...prev, isOpen: false };
+    });
+  };
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading || !selectedEmployee) return;
 
+    // Normal message handling
     const userMessage: Message = {
       id: Date.now().toString(),
       text: inputMessage,
@@ -487,24 +535,55 @@ Hello, **${employee.name}**, how can I help you today?`,
         chatId: chatId || undefined,
         message: inputMessage,
         employeeId: selectedEmployee.id,
+        signatures: []
       };
 
       const response: ChatResponse = await hrApi.chat(request);
+      var signatures = [];
+
+      for (const signature of response.documentsToSign) {
+        const signatureResult = await requestSignature(
+          signature.title,
+          signature.content
+        );
+        if (signatureResult.confirmed) {
+          await hrApi.signDocument({
+            chatId: response.chatId,
+            employeeId: selectedEmployee.id,
+            toolId: signature.toolId,
+            documentId: signature.documentId,
+            confirmed: signatureResult.confirmed,
+            signatureBlob: signatureResult.signature || undefined
+          });
+          signatures.push({ toolId: signature.toolId, content: 'Signed by employee' });
+        }
+        else {
+          signatures.push({ toolId: signature.toolId, content: 'Employee declined to sign' });
+        }
+      }
+      // if there are signatures, send them back to the model
+      const finalResponse = signatures.length === 0 ? response :
+        await hrApi.chat({
+          chatId: request.chatId,
+          signatures: signatures,
+          message: '',
+          employeeId: selectedEmployee.id,
+        });
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: response.answer,
+        text: finalResponse.answer || "Document processing completed.",
         isUser: false,
         timestamp: new Date(),
-        followups: response.followups,
+        followups: finalResponse.followups,
       };
 
       setMessages(prev => [...prev, botMessage]);
 
-      // Update chat ID from the response to maintain conversation continuity
-      if (response.chatId) {
-        setChatId(response.chatId);
+      if (finalResponse.chatId) {
+        setChatId(finalResponse.chatId);
       }
+
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage: Message = {
@@ -545,8 +624,11 @@ Hello, **${employee.name}**, how can I help you today?`,
               id="employeeSelect"
               value={selectedEmployee?.id || ''}
               onChange={(e) => handleEmployeeSelect(e.target.value)}
+              disabled={isLoadingEmployees}
             >
-              <option value="">Choose your name to begin...</option>
+              <option value="">
+                {isLoadingEmployees ? "Loading employees..." : "Choose your name to begin..."}
+              </option>
               {employees.map((employee) => (
                 <option key={employee.id} value={employee.id}>
                   {employee.name} - {employee.jobTitle} ({employee.department})
@@ -566,7 +648,7 @@ Hello, **${employee.name}**, how can I help you today?`,
 
       <MessagesContainer>
         {messages.map((message) => (
-          <MessageBubble key={message.id} isUser={message.isUser}>
+          <MessageBubble key={message.id} $isUser={message.isUser}>
             <MessageContent>
               {message.isUser ? (
                 message.text
@@ -625,6 +707,14 @@ Hello, **${employee.name}**, how can I help you today?`,
           </SendButton>
         </MessageInputContainer>
       </InputContainer>
+
+      <SignatureDialog
+        isOpen={signatureDialog.isOpen}
+        title={signatureDialog.title}
+        description={signatureDialog.description}
+        onConfirm={handleSignatureConfirm}
+        onCancel={handleSignatureCancel}
+      />
     </ChatContainer>
   );
-};
+}

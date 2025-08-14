@@ -42,6 +42,9 @@ namespace HRAssistant.Controllers
                 // Create HR issues
                 await SeedHRIssues(session);
 
+                // Create signature documents
+                await SeedSignatureDocuments(session);
+
                 await session.SaveChangesAsync();
                 return Ok(new { Message = "All sample data created successfully!" });
             }
@@ -888,6 +891,251 @@ Any suspected or confirmed data breach must be reported immediately to the Data 
             foreach (var issue in issues)
             {
                 await session.StoreAsync(issue);
+            }
+        }
+
+        [HttpPost("signature-documents")]
+        public async Task<ActionResult> SeedSignatureDocuments()
+        {
+            using var session = _documentStore.OpenAsyncSession();
+            await SeedSignatureDocuments(session);
+            await session.SaveChangesAsync();
+            return Ok(new { Message = "Signature documents created successfully!" });
+        }
+
+        private async Task SeedSignatureDocuments(Raven.Client.Documents.Session.IAsyncDocumentSession session)
+        {
+            var documents = new List<SignatureDocument>
+            {
+                new()
+                {
+                    Id = "signature-documents/nda-standard",
+                    Title = "Non-Disclosure Agreement (Standard)",
+                    Type = "NDA",
+                    Version = 2,
+                    CreatedDate = new DateTime(2024, 1, 15),
+                    CreatedBy = "Legal Department",
+                    LastUpdated = new DateTime(2024, 6, 10),
+                    UpdatedBy = "Legal Department",
+                    Description = "Standard non-disclosure agreement for all employees handling confidential information",
+                    Tags = new() { "confidentiality", "legal", "mandatory" },
+                    ExpirationDays = 365, // Expires after 1 year
+                    Content = @"# Non-Disclosure Agreement
+
+## Confidentiality Commitment
+By signing this agreement, I acknowledge that during my employment, I may have access to confidential information including but not limited to:
+- Customer data and business relationships
+- Proprietary software and technical specifications  
+- Financial information and business strategies
+- Personnel records and compensation data
+- Marketing plans and competitive intelligence
+
+## Obligations
+I agree to:
+1. Keep all confidential information strictly confidential
+2. Not disclose any confidential information to unauthorized parties
+3. Use confidential information solely for business purposes
+4. Return all confidential materials upon termination
+5. Report any suspected breaches immediately
+
+This agreement remains in effect during employment and for 2 years after termination."
+                },
+                new()
+                {
+                    Id = "signature-documents/code-of-conduct",
+                    Title = "Employee Code of Conduct",
+                    Type = "Policy",
+                    Version = 3,
+                    CreatedDate = new DateTime(2024, 2, 1),
+                    CreatedBy = "Human Resources",
+                    LastUpdated = new DateTime(2024, 8, 1),
+                    UpdatedBy = "Human Resources",
+                    Description = "Comprehensive code of conduct covering workplace behavior and ethical standards",
+                    Tags = new() { "ethics", "conduct", "workplace", "mandatory" },
+                    Content = @"# Employee Code of Conduct
+
+## Professional Standards
+All employees are expected to maintain the highest standards of professional conduct, including:
+- Treating colleagues, customers, and partners with respect and dignity
+- Maintaining honesty and integrity in all business dealings
+- Following all company policies and procedures
+- Reporting violations or concerns through appropriate channels
+
+## Prohibited Conduct
+The following behaviors are strictly prohibited:
+- Harassment or discrimination of any kind
+- Conflicts of interest without proper disclosure
+- Misuse of company resources or information
+- Violation of safety protocols
+- Substance abuse on company premises
+
+## Compliance and Reporting
+Employees must complete annual ethics training and report any policy violations promptly."
+                },
+                new()
+                {
+                    Id = "signature-documents/remote-work-agreement",
+                    Title = "Remote Work Policy Acknowledgment",
+                    Type = "Agreement",
+                    Version = 1,
+                    CreatedDate = new DateTime(2024, 3, 1),
+                    CreatedBy = "Human Resources",
+                    Description = "Acknowledgment of remote work policies and responsibilities",
+                    Tags = new() { "remote work", "policy", "flexible work" },
+                    Content = @"# Remote Work Policy Acknowledgment
+
+## Work Environment Requirements
+I acknowledge my responsibility to:
+- Maintain a professional, safe, and productive home office
+- Ensure reliable internet connectivity and communication access
+- Protect company equipment and data in remote locations
+- Maintain regular communication with supervisors and team members
+
+## Performance and Accountability
+I understand that remote work success is measured by results and that I must:
+- Meet all performance expectations and deadlines
+- Participate in required meetings and training sessions
+- Be available during agreed-upon core collaboration hours
+- Use company-approved tools and software for all work activities
+
+## Compliance
+I agree to follow all company policies while working remotely and understand that this arrangement may be modified or terminated based on business needs or performance."
+                },
+                new()
+                {
+                    Id = "signature-documents/safety-training",
+                    Title = "Workplace Safety Training Completion",
+                    Type = "Certification",
+                    Version = 1,
+                    CreatedDate = new DateTime(2024, 1, 10),
+                    CreatedBy = "Safety Department",
+                    Description = "Certification of completion of mandatory workplace safety training",
+                    Tags = new() { "safety", "training", "certification", "mandatory" },
+                    ExpirationDays = 365, // Annual renewal required
+                    Content = @"# Workplace Safety Training Completion
+
+## Training Completion Acknowledgment
+I certify that I have completed the required workplace safety training covering:
+- Emergency evacuation procedures and assembly points
+- Fire safety and proper use of fire extinguishers
+- First aid basics and location of emergency supplies
+- Incident reporting procedures and safety protocols
+- Equipment safety guidelines and PPE requirements
+
+## Commitment to Safety
+I commit to:
+- Following all safety protocols and procedures
+- Reporting hazards and incidents immediately
+- Participating in emergency drills and safety meetings
+- Using provided safety equipment properly
+- Seeking clarification when unsure about safety procedures
+
+## Annual Renewal
+I understand this certification expires annually and requires refresher training."
+                },
+                new()
+                {
+                    Id = "signature-documents/data-privacy-policy",
+                    Title = "Data Privacy and Protection Policy",
+                    Type = "Policy",
+                    Version = 2,
+                    CreatedDate = new DateTime(2024, 4, 1),
+                    CreatedBy = "IT Security",
+                    LastUpdated = new DateTime(2024, 7, 15),
+                    UpdatedBy = "IT Security",
+                    Description = "Acknowledgment of data privacy responsibilities and GDPR compliance",
+                    Tags = new() { "privacy", "data protection", "GDPR", "security" },
+                    Content = @"# Data Privacy and Protection Policy
+
+## Data Handling Responsibilities
+I acknowledge my responsibility to protect personal data and understand that I must:
+- Process personal data only for legitimate business purposes
+- Implement appropriate security measures for data protection
+- Report data breaches or suspected breaches immediately
+- Respect individuals' privacy rights and data subject requests
+- Follow data retention and disposal policies
+
+## GDPR Compliance
+I understand the principles of GDPR including:
+- Lawfulness, fairness, and transparency in data processing
+- Purpose limitation and data minimization
+- Accuracy and storage limitation requirements
+- Security and accountability obligations
+
+## Security Measures
+I commit to:
+- Using strong passwords and enabling multi-factor authentication
+- Keeping software updated and following IT security policies
+- Not sharing access credentials or leaving systems unattended
+- Reporting suspicious activities or security concerns"
+                },
+                new()
+                {
+                    Id = "signature-documents/equipment-responsibility",
+                    Title = "Company Equipment Responsibility Agreement",
+                    Type = "Agreement",
+                    Version = 1,
+                    CreatedDate = new DateTime(2024, 2, 15),
+                    CreatedBy = "IT Department",
+                    Description = "Agreement outlining responsibilities for company-provided equipment",
+                    Tags = new() { "equipment", "responsibility", "IT", "assets" },
+                    Content = @"# Company Equipment Responsibility Agreement
+
+## Equipment Assignment
+I acknowledge receipt of company equipment as detailed in the attached inventory list and agree to:
+- Use equipment solely for business purposes
+- Maintain equipment in good working condition
+- Report damage, loss, or theft immediately
+- Allow IT department access for maintenance and updates
+- Return all equipment in good condition upon request or termination
+
+## Security and Care
+I commit to:
+- Installing only approved software and updates
+- Using strong passwords and security features
+- Protecting equipment from theft, damage, or unauthorized access
+- Following IT policies for data backup and security
+- Not attempting unauthorized repairs or modifications
+
+## Liability and Return
+I understand that I may be liable for damage due to negligence or misuse and that all equipment must be returned promptly when requested."
+                },
+                new()
+                {
+                    Id = "signature-documents/social-media-policy",
+                    Title = "Social Media and Communications Policy",
+                    Type = "Policy",
+                    Version = 1,
+                    CreatedDate = new DateTime(2024, 5, 1),
+                    CreatedBy = "Marketing Department",
+                    Description = "Guidelines for social media use and external communications representing the company",
+                    Tags = new() { "social media", "communications", "brand", "policy" },
+                    Content = @"# Social Media and Communications Policy
+
+## Personal Social Media Use
+When posting on personal social media accounts, I agree to:
+- Not disclose confidential company information
+- Include disclaimers when discussing work-related topics
+- Respect colleagues' privacy and company reputation
+- Follow professional standards of conduct online
+- Separate personal opinions from company positions
+
+## Company Representation
+If authorized to represent the company online, I will:
+- Follow brand guidelines and approved messaging
+- Maintain professional tone and accuracy in all posts
+- Coordinate with marketing team for official communications
+- Respond promptly and appropriately to customer inquiries
+- Escalate negative feedback or crises to appropriate teams
+
+## Compliance and Monitoring
+I understand that social media activity may be monitored for compliance and that violations may result in disciplinary action."
+                }
+            };
+
+            foreach (var document in documents)
+            {
+                await session.StoreAsync(document);
             }
         }
     }

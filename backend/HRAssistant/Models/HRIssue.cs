@@ -2,14 +2,14 @@ namespace HRAssistant.Models;
 
 public class HRIssue
 {
-    public string Id { get; set; } = string.Empty;
-    public string EmployeeId { get; set; } = string.Empty;
-    public string EmployeeName { get; set; } = string.Empty;
-    public string Title { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public string Category { get; set; } = string.Empty; // Benefits, Payroll, IT Request, Policy Question, etc.
-    public string Priority { get; set; } = "Medium"; // Low, Medium, High, Urgent
-    public string Status { get; set; } = "Open"; // Open, In Progress, Resolved, Closed
+    public string Id { get; set; }
+    public string EmployeeId { get; set; }
+    public string EmployeeName { get; set; }
+    public string Title { get; set; }
+    public string Description { get; set; }
+    public string Category { get; set; } // Benefits, Payroll, IT Request, Policy Question, etc.
+    public string Priority { get; set; } // Low, Medium, High, Urgent
+    public string Status { get; set; } // Open, In Progress, Resolved, Closed
     public DateTime SubmittedDate { get; set; }
     public DateTime? AssignedDate { get; set; }
     public DateTime? ResolvedDate { get; set; }

@@ -20,17 +20,6 @@ builder.Services.AddSingleton<IDocumentStore>(provider =>
     };
 
     store.Initialize();
-    HumanResourcesAgent.Create(store).ContinueWith(task =>
-    {
-        if (task.IsFaulted)
-        {
-            Console.WriteLine("Failed to create agent: " + task.Exception);
-        }
-        else
-        {
-            Console.WriteLine("Agent created successfully.");
-        }
-    });
     return store;
 });
 
@@ -45,6 +34,22 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+{
+    var store = app.Services.GetRequiredService<IDocumentStore>();
+    Console.WriteLine("Creating agent...");
+    _ = HumanResourcesAgent.Create(store).ContinueWith(task =>
+    {
+        if (task.IsFaulted)
+        {
+            Console.WriteLine("Failed to create agent: " + task.Exception);
+        }
+        else
+        {
+            Console.WriteLine("Agent created successfully.");
+        }
+    });
+}
 
 if (app.Environment.IsDevelopment())
 {

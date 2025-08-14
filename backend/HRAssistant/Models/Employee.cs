@@ -15,6 +15,7 @@ public class Employee
     public string Email { get; set; } = string.Empty;
     public string Building { get; set; } = string.Empty;
     public VacationInfo Vacation { get; set; } = new();
+    public List<SignedDocument> SignedDocuments { get; set; } = new();
 }
 
 public class VacationInfo
