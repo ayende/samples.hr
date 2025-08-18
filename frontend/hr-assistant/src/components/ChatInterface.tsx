@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import styled from 'styled-components';
 import ReactMarkdown from 'react-markdown';
-import { theme } from '../theme';
-import { hrApi, ChatRequest, ChatResponse, ChatHistoryResponse, Employee, EmployeeDropdown, SignatureDocumentRequest, SignDocumentRequest } from '../api';
+import { hrApi, ChatRequest, ChatResponse, EmployeeDropdown } from '../api';
 import { SignatureDialog } from './SignatureDialog';
+import './ChatInterface.css';
 
 interface Message {
   id: string;
@@ -12,353 +11,6 @@ interface Message {
   timestamp: Date;
   followups?: string[];
 }
-
-const ChatContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  max-width: 900px;
-  margin: 0 auto;
-  background: ${theme.colors.background.primary};
-`;
-
-const Header = styled.div`
-  background: linear-gradient(135deg, ${theme.colors.primary.main}, ${theme.colors.secondary.main});
-  color: white;
-  padding: ${theme.spacing.md} ${theme.spacing.lg};
-  box-shadow: ${theme.shadows.medium};
-  
-  @media (max-width: 768px) {
-    padding: ${theme.spacing.sm};
-  }
-`;
-
-const HeaderContent = styled.div`
-  max-width: 900px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: ${theme.spacing.lg};
-  
-  @media (max-width: 768px) {
-    flex-direction: column;
-    gap: ${theme.spacing.md};
-    align-items: stretch;
-  }
-`;
-
-const TitleSection = styled.div`
-  flex-shrink: 0;
-  
-  @media (max-width: 768px) {
-    text-align: center;
-  }
-`;
-
-const Title = styled.h1`
-  margin: 0;
-  font-size: ${theme.typography.h3.fontSize};
-  font-weight: ${theme.typography.h3.fontWeight};
-  
-  @media (max-width: 768px) {
-    font-size: ${theme.typography.body.fontSize};
-  }
-`;
-
-const Subtitle = styled.p`
-  margin: ${theme.spacing.xs} 0 0;
-  opacity: 0.9;
-  font-size: ${theme.typography.caption.fontSize};
-`;
-
-const EmployeeSelectionHeader = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: ${theme.borderRadius.medium};
-  padding: ${theme.spacing.md};
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  min-width: 300px;
-  flex-shrink: 0;
-  
-  @media (max-width: 768px) {
-    min-width: unset;
-    width: 100%;
-    padding: ${theme.spacing.sm};
-  }
-`;
-
-const HeaderLabel = styled.label`
-  display: block;
-  font-size: ${theme.typography.small.fontSize};
-  color: white;
-  font-weight: 600;
-  margin-bottom: ${theme.spacing.xs};
-  text-align: center;
-`;
-
-const HeaderSelect = styled.select`
-  width: 100%;
-  padding: ${theme.spacing.sm};
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: ${theme.borderRadius.small};
-  font-size: ${theme.typography.small.fontSize};
-  background: rgba(255, 255, 255, 0.9);
-  color: ${theme.colors.text.primary};
-  
-  &:focus {
-    outline: none;
-    border-color: white;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
-  }
-  
-  &:disabled {
-    background: rgba(255, 255, 255, 0.5);
-    color: ${theme.colors.text.light};
-    cursor: not-allowed;
-  }
-  
-  @media (max-width: 768px) {
-    font-size: ${theme.typography.caption.fontSize};
-    padding: ${theme.spacing.xs};
-  }
-`;
-
-const HeaderSelectedEmployee = styled.div`
-  padding: ${theme.spacing.sm};
-  background: rgba(255, 255, 255, 0.15);
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-radius: ${theme.borderRadius.small};
-  color: white;
-  font-weight: 600;
-  text-align: center;
-  font-size: ${theme.typography.small.fontSize};
-  
-  .employee-name {
-    font-size: ${theme.typography.body.fontSize};
-    margin-bottom: 2px;
-  }
-  
-  .employee-details {
-    opacity: 0.9;
-    font-weight: 400;
-    font-size: ${theme.typography.caption.fontSize};
-  }
-  
-  @media (max-width: 768px) {
-    padding: ${theme.spacing.xs};
-    
-    .employee-name {
-      font-size: ${theme.typography.small.fontSize};
-    }
-    
-    .employee-details {
-      font-size: 11px;
-    }
-  }
-`;
-
-const MessagesContainer = styled.div`
-  flex: 1;
-  padding: ${theme.spacing.lg};
-  overflow-y: auto;
-  background: ${theme.colors.background.secondary};
-`;
-
-const MessageBubble = styled.div<{ $isUser: boolean }>`
-  max-width: 75%;
-  margin: ${theme.spacing.md} 0;
-  padding: ${theme.spacing.lg};
-  border-radius: ${theme.borderRadius.large};
-  align-self: ${props => props.$isUser ? 'flex-end' : 'flex-start'};
-  margin-left: ${props => props.$isUser ? 'auto' : '0'};
-  margin-right: ${props => props.$isUser ? '0' : 'auto'};
-  
-  ${props => props.$isUser ? `
-    background: linear-gradient(135deg, ${theme.colors.primary.main}, ${theme.colors.primary.dark});
-    color: white;
-    border-bottom-right-radius: ${theme.borderRadius.small};
-  ` : `
-    background: ${theme.colors.background.card};
-    color: ${theme.colors.text.primary};
-    border: 1px solid ${theme.colors.border.light};
-    border-bottom-left-radius: ${theme.borderRadius.small};
-    box-shadow: ${theme.shadows.small};
-  `}
-`;
-
-const MessageContent = styled.div`
-  line-height: ${theme.typography.body.lineHeight};
-  
-  h1, h2, h3, h4, h5, h6 {
-    margin: ${theme.spacing.md} 0 ${theme.spacing.sm};
-    color: ${theme.colors.primary.main};
-  }
-  
-  p {
-    margin: ${theme.spacing.sm} 0;
-  }
-  
-  ul, ol {
-    margin: ${theme.spacing.sm} 0;
-    padding-left: ${theme.spacing.lg};
-  }
-  
-  li {
-    margin: ${theme.spacing.xs} 0;
-  }
-  
-  strong {
-    font-weight: 600;
-    color: ${theme.colors.primary.main};
-  }
-  
-  em {
-    font-style: italic;
-    opacity: 0.9;
-  }
-  
-  code {
-    background: ${theme.colors.background.accent};
-    padding: 2px 4px;
-    border-radius: ${theme.borderRadius.small};
-    font-family: 'Courier New', monospace;
-  }
-`;
-
-const Timestamp = styled.div`
-  font-size: ${theme.typography.caption.fontSize};
-  opacity: 0.7;
-  margin-top: ${theme.spacing.sm};
-`;
-
-const Followups = styled.div`
-  margin-top: ${theme.spacing.lg};
-  display: flex;
-  flex-wrap: wrap;
-  gap: ${theme.spacing.sm};
-`;
-
-const FollowupButton = styled.button`
-  background: ${theme.colors.secondary.lighter};
-  color: ${theme.colors.text.primary};
-  border: 1px solid ${theme.colors.secondary.light};
-  border-radius: ${theme.borderRadius.large};
-  padding: ${theme.spacing.sm} ${theme.spacing.md};
-  font-size: ${theme.typography.small.fontSize};
-  cursor: pointer;
-  transition: all ${theme.transitions.normal};
-  
-  &:hover {
-    background: ${theme.colors.secondary.light};
-    color: white;
-    transform: translateY(-1px);
-    box-shadow: ${theme.shadows.small};
-  }
-`;
-
-const InputContainer = styled.div`
-  padding: ${theme.spacing.lg};
-  background: ${theme.colors.background.card};
-  border-top: 1px solid ${theme.colors.border.light};
-  box-shadow: ${theme.shadows.medium};
-`;
-
-const EmployeeSection = styled.div`
-  margin-bottom: ${theme.spacing.lg};
-  padding: ${theme.spacing.md};
-  background: ${theme.colors.background.accent};
-  border-radius: ${theme.borderRadius.medium};
-  border: 1px solid ${theme.colors.border.accent};
-`;
-
-const Label = styled.label`
-  display: block;
-  font-size: ${theme.typography.small.fontSize};
-  color: ${theme.colors.text.secondary};
-  font-weight: 600;
-  margin-bottom: ${theme.spacing.sm};
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: ${theme.spacing.md};
-  border: 1px solid ${theme.colors.border.medium};
-  border-radius: ${theme.borderRadius.medium};
-  font-size: ${theme.typography.body.fontSize};
-  background: white;
-  
-  &:focus {
-    outline: none;
-    border-color: ${theme.colors.primary.main};
-    box-shadow: 0 0 0 3px ${theme.colors.primary.lighter};
-  }
-  
-  &:disabled {
-    background: ${theme.colors.background.secondary};
-    color: ${theme.colors.text.light};
-    cursor: not-allowed;
-  }
-`;
-
-const SelectedEmployee = styled.div`
-  padding: ${theme.spacing.md};
-  background: white;
-  border: 2px solid ${theme.colors.primary.light};
-  border-radius: ${theme.borderRadius.medium};
-  color: ${theme.colors.primary.dark};
-  font-weight: 600;
-  text-align: center;
-`;
-
-const MessageInputContainer = styled.div`
-  display: flex;
-  gap: ${theme.spacing.sm};
-`;
-
-const MessageInput = styled.input`
-  flex: 1;
-  padding: ${theme.spacing.md};
-  border: 1px solid ${theme.colors.border.medium};
-  border-radius: ${theme.borderRadius.medium};
-  font-size: ${theme.typography.body.fontSize};
-  
-  &:focus {
-    outline: none;
-    border-color: ${theme.colors.primary.main};
-    box-shadow: 0 0 0 3px ${theme.colors.primary.lighter};
-  }
-`;
-
-const SendButton = styled.button`
-  background: linear-gradient(135deg, ${theme.colors.primary.main}, ${theme.colors.primary.dark});
-  color: white;
-  border: none;
-  border-radius: ${theme.borderRadius.medium};
-  padding: ${theme.spacing.md} ${theme.spacing.xl};
-  font-weight: 600;
-  cursor: pointer;
-  transition: all ${theme.transitions.normal};
-  
-  &:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: ${theme.shadows.medium};
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-`;
-
-const LoadingIndicator = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${theme.spacing.sm};
-  padding: ${theme.spacing.md};
-  color: ${theme.colors.text.secondary};
-  font-style: italic;
-`;
 
 export const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -610,20 +262,20 @@ Hello, **${employee.name}**, how can I help you today?`,
   };
 
   return (
-    <ChatContainer>
-      <Header>
-        <HeaderContent>
-          <TitleSection>
-            <Title>Human Resources Assistant</Title>
-            <Subtitle>Your dedicated HR support companion</Subtitle>
-          </TitleSection>
-
+    <div className="chat-container">
+      <header className="header">
+        <div className="header-content">
+          <div className="title-section">
+            <h1 className="title">Human Resources Assistant</h1>
+            <p className="subtitle">Your dedicated HR support companion</p>
+          </div>
 
           {!isEmployeeSelected ? (
-            <HeaderSelect
+            <select
+              className="header-select"
               id="employeeSelect"
               value={selectedEmployee?.id || ''}
-              onChange={(e) => handleEmployeeSelect(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleEmployeeSelect(e.target.value)}
               disabled={isLoadingEmployees}
             >
               <option value="">
@@ -634,79 +286,82 @@ Hello, **${employee.name}**, how can I help you today?`,
                   {employee.name} - {employee.jobTitle} ({employee.department})
                 </option>
               ))}
-            </HeaderSelect>
+            </select>
           ) : (
-            <HeaderSelectedEmployee>
+            <div className="header-selected-employee">
               <div className="employee-name">{selectedEmployee?.name}</div>
               <div className="employee-details">
                 {selectedEmployee?.jobTitle} • {selectedEmployee?.department}
               </div>
-            </HeaderSelectedEmployee>
+            </div>
           )}
-        </HeaderContent>
-      </Header>
+        </div>
+      </header>
 
-      <MessagesContainer>
+      <div className="messages-container">
         {messages.map((message) => (
-          <MessageBubble key={message.id} $isUser={message.isUser}>
-            <MessageContent>
+          <div key={message.id} className={`message-bubble ${message.isUser ? 'user' : 'bot'}`}>
+            <div className="message-content">
               {message.isUser ? (
                 message.text
               ) : (
                 <ReactMarkdown>{message.text}</ReactMarkdown>
               )}
-            </MessageContent>
+            </div>
 
-            <Timestamp>
+            <div className="timestamp">
               {message.timestamp.toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit'
               })}
-            </Timestamp>
+            </div>
 
             {message.followups && message.followups.length > 0 && (
-              <Followups>
+              <div className="followups">
                 {message.followups.map((followup, index) => (
-                  <FollowupButton
+                  <button
                     key={index}
+                    className="followup-button"
                     onClick={() => handleFollowupClick(followup)}
                     disabled={!selectedEmployee}
                   >
                     {followup}
-                  </FollowupButton>
+                  </button>
                 ))}
-              </Followups>
+              </div>
             )}
-          </MessageBubble>
+          </div>
         ))}
 
         {isLoading && (
-          <LoadingIndicator>
+          <div className="loading-indicator">
             <div>🤔 Processing your request...</div>
-          </LoadingIndicator>
+          </div>
         )}
 
         <div ref={messagesEndRef} />
-      </MessagesContainer>
+      </div>
 
-      <InputContainer>
-        <MessageInputContainer>
-          <MessageInput
+      <div className="input-container">
+        <div className="message-input-container">
+          <input
+            className="message-input"
             type="text"
             value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder={selectedEmployee ? "Ask me anything about HR..." : "Please select your employee profile above to get started"}
             disabled={isLoading || !selectedEmployee}
           />
-          <SendButton
+          <button
+            className="send-button"
             onClick={handleSendMessage}
             disabled={isLoading || !inputMessage.trim() || !selectedEmployee}
           >
             Send
-          </SendButton>
-        </MessageInputContainer>
-      </InputContainer>
+          </button>
+        </div>
+      </div>
 
       <SignatureDialog
         isOpen={signatureDialog.isOpen}
@@ -715,6 +370,6 @@ Hello, **${employee.name}**, how can I help you today?`,
         onConfirm={handleSignatureConfirm}
         onCancel={handleSignatureCancel}
       />
-    </ChatContainer>
+    </div>
   );
 }

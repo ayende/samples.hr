@@ -1,0 +1,243 @@
+/* SignatureDialog Styles */
+
+.dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    backdrop-filter: blur(0.5px);
+}
+
+.dialog-overlay.hidden {
+    display: none;
+}
+
+.dialog-overlay.visible {
+    display: block;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translate(-50%, -50%) translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, -50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+.dialog-container {
+    background: white;
+    border-radius: var(--border-radius-large);
+    box-shadow: var(--shadow-large);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: fixed;
+    transform: translate(-50%, -50%);
+    animation: slideUp 0.3s ease-out;
+}
+
+.dialog-header {
+    background: var(--gradient-purple);
+    color: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+    cursor: move;
+    user-select: none;
+}
+
+.dialog-header:active {
+    cursor: grabbing;
+}
+
+.dialog-title {
+    margin: 0;
+    font-size: var(--font-size-h3);
+    font-weight: var(--font-weight-h3);
+}
+
+.dialog-content {
+    padding: var(--spacing-lg);
+}
+
+.description {
+    margin-bottom: var(--spacing-lg);
+    line-height: var(--line-height-body);
+    color: var(--text-primary);
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: var(--spacing-sm);
+}
+
+/* Custom scrollbar styling */
+.description::-webkit-scrollbar {
+    width: 6px;
+}
+
+.description::-webkit-scrollbar-track {
+    background: var(--background-secondary);
+    border-radius: var(--border-radius-small);
+}
+
+.description::-webkit-scrollbar-thumb {
+    background: var(--border-medium);
+    border-radius: var(--border-radius-small);
+}
+
+.description::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-light);
+}
+
+.description h1,
+.description h2,
+.description h3,
+.description h4,
+.description h5,
+.description h6 {
+    margin: var(--spacing-md) 0 var(--spacing-sm);
+    color: var(--primary-main);
+}
+
+.description p {
+    margin: var(--spacing-sm) 0;
+}
+
+.description ul,
+.description ol {
+    margin: var(--spacing-sm) 0;
+    padding-left: var(--spacing-lg);
+}
+
+.description li {
+    margin: var(--spacing-xs) 0;
+}
+
+.description strong {
+    font-weight: 600;
+    color: var(--primary-main);
+}
+
+.description em {
+    font-style: italic;
+    opacity: 0.9;
+}
+
+.description code {
+    background: var(--background-accent);
+    padding: 2px 4px;
+    border-radius: var(--border-radius-small);
+    font-family: 'Courier New', monospace;
+}
+
+.description blockquote {
+    border-left: 4px solid var(--primary-light);
+    margin: var(--spacing-md) 0;
+    padding-left: var(--spacing-md);
+    background: var(--background-accent);
+    border-radius: 0 var(--border-radius-small) var(--border-radius-small) 0;
+}
+
+.signature-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.signature-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.signature-canvas-container {
+    border: 2px solid var(--border-medium);
+    border-radius: var(--border-radius-medium);
+    background: var(--background-secondary);
+    position: relative;
+    overflow: hidden;
+}
+
+.signature-canvas {
+    display: block;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.clear-button {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    background: var(--background-card);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--border-radius-small);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-small);
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all var(--transition-normal);
+}
+
+.clear-button:hover {
+    background: var(--background-primary);
+    border-color: var(--primary-main);
+    color: var(--primary-main);
+}
+
+.signature-instructions {
+    font-size: var(--font-size-small);
+    color: var(--text-secondary);
+    margin-top: var(--spacing-xs);
+    text-align: center;
+}
+
+.dialog-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: flex-end;
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-light);
+}
+
+.cancel-button {
+    background: var(--background-card);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--border-radius-medium);
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.cancel-button:hover {
+    background: var(--background-secondary);
+    border-color: var(--border-medium);
+    color: var(--text-primary);
+}
+
+.confirm-button {
+    background: var(--gradient-purple);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-medium);
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.confirm-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-purple);
+}
+
+.confirm-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

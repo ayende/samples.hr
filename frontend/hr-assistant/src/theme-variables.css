@@ -1,0 +1,71 @@
+/* CSS Variables for HR Assistant Theme - Purple Design on Light Background */
+
+:root {
+    /* Colors - Primary (Purple) */
+    --primary-lighter: #F3E8FF;
+    --primary-light: #DDD6FE;
+    --primary-main: #8B5CF6;
+    --primary-dark: #7C3AED;
+    --primary-darker: #6D28D9;
+
+    /* Colors - Secondary (Complementary Purple Tones) */
+    --secondary-lighter: #F3E8FF;
+    --secondary-light: #C4B5FD;
+    --secondary-main: #A78BFA;
+    --secondary-dark: #8B5CF6;
+    --secondary-darker: #7C3AED;
+
+    /* Background Colors (Light Theme) */
+    --background-primary: #FFFFFF;
+    --background-secondary: #FAFBFF;
+    --background-card: #FFFFFF;
+    --background-accent: #F8F6FF;
+
+    /* Text Colors (Dark on Light) */
+    --text-primary: #1F2937;
+    --text-secondary: #6B7280;
+    --text-light: #9CA3AF;
+    --text-white: #FFFFFF;
+    --text-purple: #8B5CF6;
+
+    /* Border Colors */
+    --border-light: #E5E7EB;
+    --border-medium: #D1D5DB;
+    --border-accent: #DDD6FE;
+
+    /* Gradients (Purple Theme) */
+    --gradient-purple: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #6D28D9 100%);
+
+    /* Shadows (Purple-tinted for theme consistency) */
+    --shadow-small: 0 2px 4px rgba(139, 92, 246, 0.1);
+    --shadow-medium: 0 4px 8px rgba(139, 92, 246, 0.15);
+    --shadow-large: 0 8px 16px rgba(139, 92, 246, 0.2);
+    --shadow-purple: 0 4px 12px rgba(139, 92, 246, 0.25);
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-xxl: 48px;
+
+    /* Border Radius */
+    --border-radius-small: 4px;
+    --border-radius-medium: 8px;
+    --border-radius-large: 12px;
+
+    /* Typography */
+    --font-size-caption: 12px;
+    --font-size-small: 14px;
+    --font-size-body: 16px;
+    --font-size-h3: 24px;
+
+    --font-weight-normal: 400;
+    --font-weight-h3: 700;
+
+    --line-height-body: 1.5;
+
+    /* Transitions */
+    --transition-normal: 0.2s ease;
+}

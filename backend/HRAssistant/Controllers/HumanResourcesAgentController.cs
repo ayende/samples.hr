@@ -129,14 +129,6 @@ namespace HRAssistant.Controllers
             });
         }
 
-        [HttpGet("employees")]
-        public async Task<ActionResult<List<Employee>>> GetEmployees()
-        {
-            using var session = _documentStore.OpenAsyncSession();
-            var employees = await session.Query<Employee>().ToListAsync();
-            return Ok(employees);
-        }
-
         [HttpGet("employees/dropdown")]
         public async Task<ActionResult<List<object>>> GetEmployeesForDropdown()
         {
@@ -152,53 +144,6 @@ namespace HRAssistant.Controllers
                 })
                 .ToListAsync();
             return Ok(employees);
-        }
-
-
-        [HttpGet("policies")]
-        public async Task<ActionResult<List<HRPolicy>>> GetPolicies()
-        {
-            using var session = _documentStore.OpenAsyncSession();
-            var policies = await session.Query<HRPolicy>().ToListAsync();
-            return Ok(policies);
-        }
-
-        [HttpGet("vacations")]
-        public async Task<ActionResult<List<VacationRequest>>> GetVacations()
-        {
-            using var session = _documentStore.OpenAsyncSession();
-            var vacations = await session.Query<VacationRequest>().ToListAsync();
-            return Ok(vacations);
-        }
-
-        [HttpGet("paystubs/{employeeId}")]
-        public async Task<ActionResult<List<PayStub>>> GetPayStubs(string employeeId)
-        {
-            using var session = _documentStore.OpenAsyncSession();
-            var payStubs = await session.Query<PayStub>()
-                .Where(p => p.EmployeeId == $"employees/{employeeId}")
-                .OrderByDescending(p => p.PayDate)
-                .ToListAsync();
-            return Ok(payStubs);
-        }
-
-        [HttpGet("issues")]
-        public async Task<ActionResult<List<HRIssue>>> GetHRIssues()
-        {
-            using var session = _documentStore.OpenAsyncSession();
-            var issues = await session.Query<HRIssue>().ToListAsync();
-            return Ok(issues);
-        }
-
-        [HttpGet("issues/{employeeId}")]
-        public async Task<ActionResult<List<HRIssue>>> GetEmployeeHRIssues(string employeeId)
-        {
-            using var session = _documentStore.OpenAsyncSession();
-            var issues = await session.Query<HRIssue>()
-                .Where(i => i.EmployeeId == $"employees/{employeeId}")
-                .OrderByDescending(i => i.SubmittedDate)
-                .ToListAsync();
-            return Ok(issues);
         }
 
         [HttpGet("signature-documents")]
