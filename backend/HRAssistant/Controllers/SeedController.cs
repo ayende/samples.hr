@@ -55,60 +55,6 @@ namespace HRAssistant.Controllers
             }
         }
 
-        [HttpPost("departments")]
-        public async Task<ActionResult> SeedDepartments()
-        {
-            using var session = _documentStore.OpenAsyncSession();
-            await SeedDepartments(session);
-            await session.SaveChangesAsync();
-            return Ok(new { Message = "Departments seeded successfully!" });
-        }
-
-        [HttpPost("employees")]
-        public async Task<ActionResult> SeedEmployees()
-        {
-            using var session = _documentStore.OpenAsyncSession();
-            await SeedEmployees(session);
-            await session.SaveChangesAsync();
-            return Ok(new { Message = "Employees seeded successfully!" });
-        }
-
-        [HttpPost("policies")]
-        public async Task<ActionResult> SeedPolicies()
-        {
-            using var session = _documentStore.OpenAsyncSession();
-            await SeedHRPolicies(session);
-            await session.SaveChangesAsync();
-            return Ok(new { Message = "HR Policies seeded successfully!" });
-        }
-
-        [HttpPost("vacations")]
-        public async Task<ActionResult> SeedVacations()
-        {
-            using var session = _documentStore.OpenAsyncSession();
-            await SeedVacationRequests(session);
-            await session.SaveChangesAsync();
-            return Ok(new { Message = "Vacation requests seeded successfully!" });
-        }
-
-        [HttpPost("paystubs")]
-        public async Task<ActionResult> SeedPayStubs()
-        {
-            using var session = _documentStore.OpenAsyncSession();
-            await SeedPayStubs(session);
-            await session.SaveChangesAsync();
-            return Ok(new { Message = "Pay stubs seeded successfully!" });
-        }
-
-        [HttpPost("issues")]
-        public async Task<ActionResult> SeedIssues()
-        {
-            using var session = _documentStore.OpenAsyncSession();
-            await SeedHRIssues(session);
-            await session.SaveChangesAsync();
-            return Ok(new { Message = "HR Issues seeded successfully!" });
-        }
-
         private async Task SeedDepartments(Raven.Client.Documents.Session.IAsyncDocumentSession session)
         {
             var departments = new List<Department>
@@ -892,15 +838,6 @@ Any suspected or confirmed data breach must be reported immediately to the Data 
             {
                 await session.StoreAsync(issue);
             }
-        }
-
-        [HttpPost("signature-documents")]
-        public async Task<ActionResult> SeedSignatureDocuments()
-        {
-            using var session = _documentStore.OpenAsyncSession();
-            await SeedSignatureDocuments(session);
-            await session.SaveChangesAsync();
-            return Ok(new { Message = "Signature documents created successfully!" });
         }
 
         private async Task SeedSignatureDocuments(Raven.Client.Documents.Session.IAsyncDocumentSession session)

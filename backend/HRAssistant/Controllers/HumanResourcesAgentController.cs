@@ -23,9 +23,10 @@ namespace HRAssistant.Controllers
         [HttpPost("chat")]
         public async Task<ActionResult<ChatResponse>> Chat([FromBody] ChatRequest request)
         {
-            var chatId = request.ChatId ?? "hr/" + request.EmployeeId + "/" + DateTime.Today.ToString("yyyy-MM-dd");
+            var documentsToSign = new List<SignatureDocumentRequest>();
+            var conversationId = request.ConversationId ?? "hr/" + request.EmployeeId + "/" + DateTime.Today.ToString("yyyy-MM-dd");
             var conversation = _documentStore.AI.Conversation(
-                agentId: "hr-assistant", chatId,
+                agentId: "hr-assistant", conversationId,
                 new AiConversationCreationOptions
                 {
                     Parameters = new Dictionary<string, object>
@@ -35,14 +36,21 @@ namespace HRAssistant.Controllers
                     ExpirationInSec = 60 * 60 * 24 * 30 // 30 days
                 });
 
-            foreach (var signature in request.Signatures ?? [])
+            conversation.Receive<HumanResourcesAgent.SignDocumentArgs>("SignDocument", async (req, args) =>
             {
-                conversation.AddActionResponse(signature.ToolId, signature.Content);
-            }
-            if (string.IsNullOrWhiteSpace(request.Message) is false)
-            {
-                conversation.SetUserPrompt(request.Message);
-            }
+                using var session = _documentStore.OpenAsyncSession();
+                var document = await session.LoadAsync<SignatureDocument>(
+                                        args.Document
+                                    );
+                documentsToSign.Add(new SignatureDocumentRequest
+                {
+                    ToolId = req.ToolId,
+                    DocumentId = document.Id,
+                    Title = document.Title,
+                    Content = document.Content,
+                    Version = document.Version
+                });
+            });
 
             conversation.Handle<HumanResourcesAgent.RaiseIssueArgs>("RaiseIssue", async (args) =>
             {
@@ -62,36 +70,25 @@ namespace HRAssistant.Controllers
 
                 return "Raised issue: " + issue.Id;
             });
-            var result = await conversation.RunAsync<HumanResourcesAgent.Reply>();
 
-            var response = new ChatResponse
+            foreach (var signature in request.Signatures ?? [])
             {
-                ChatId = conversation.Id,
-                Answer = result.Answer?.Answer,
-                Followups = result.Answer?.Followups ?? [],
-                GeneratedAt = DateTime.UtcNow
-            };
-
-            var requiredActions = conversation.RequiredActions();
-
-            if (requiredActions.FirstOrDefault(act => act.Name == "SignDocument") is { } action)
+                conversation.AddActionResponse(signature.ToolId, signature.Content);
+            }
+            if (string.IsNullOrWhiteSpace(request.Message) is false)
             {
-                using var session = _documentStore.OpenAsyncSession();
-                var parameters = JObject.Parse(action.Arguments);
-                var document = await session.LoadAsync<SignatureDocument>(
-                                        parameters.Value<string>("Document")
-                                    );
-                response.DocumentsToSign.Add(new SignatureDocumentRequest
-                {
-                    ToolId = action.ToolId,
-                    DocumentId = document.Id,
-                    Title = document.Title,
-                    Content = document.Content,
-                    Version = document.Version
-                });
+                conversation.SetUserPrompt(request.Message);
             }
 
-            return Ok(response);
+            var result = await conversation.RunAsync<HumanResourcesAgent.Reply>();
+            return Ok(new ChatResponse
+            {
+                ConversationId = conversation.Id,
+                Answer = result.Answer?.Answer,
+                Followups = result.Answer?.Followups ?? [],
+                GeneratedAt = DateTime.UtcNow,
+                DocumentsToSign = documentsToSign
+            });
         }
 
         public record Message(string content, string role, DateTime date);
@@ -100,15 +97,15 @@ namespace HRAssistant.Controllers
         [HttpGet("chat/today/{*employeeId}")]
         public async Task<ActionResult<ChatHistoryResponse>> GetChatHistory(string employeeId)
         {
-            var chatId = "hr/" + employeeId + "/" + DateTime.Today.ToString("yyyy-MM-dd");
+            var conversationId = "hr/" + employeeId + "/" + DateTime.Today.ToString("yyyy-MM-dd");
             using var session = _documentStore.OpenAsyncSession();
-            var chat = await session.LoadAsync<Conversation>(chatId);
+            var chat = await session.LoadAsync<Conversation>(conversationId);
 
             var messages = chat?.Messages ?? [];
 
             return Ok(new ChatHistoryResponse
             {
-                ChatId = chatId,
+                ConversationId = conversationId,
                 Messages = messages
                     // skip tool calls, system prompt, etc
                     .Where(m => m.role == "user" || m.role == "assistant")
@@ -116,7 +113,7 @@ namespace HRAssistant.Controllers
                     .Where(m => m.content is not null && !m.content.StartsWith("AI Agent Parameters"))
                     .Select((m, i) => new ChatMessage
                     {
-                        Id = chatId + "#" + i,
+                        Id = conversationId + "#" + i,
                         Text = m.role switch
                         {
                             "assistant" when m.content.StartsWith("{") => JsonConvert.DeserializeObject<HumanResourcesAgent.Reply>(m.content)!.Answer,

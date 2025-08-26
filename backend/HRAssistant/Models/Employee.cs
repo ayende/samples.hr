@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace HRAssistant.Models;
 
 public class Employee

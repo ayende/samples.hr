@@ -8,7 +8,6 @@ public static class HumanResourcesAgent
         public string Answer { get; set; } = string.Empty;
         public string[] Followups { get; set; } = [];
     }
-
     public class RaiseIssueArgs
     {
         required public string Title { get; set; }

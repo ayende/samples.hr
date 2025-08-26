@@ -20,7 +20,7 @@ export const ChatInterface: React.FC = () => {
   const [isEmployeeSelected, setIsEmployeeSelected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(true);
-  const [chatId, setChatId] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [signatureDialog, setSignatureDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -83,8 +83,8 @@ Please select your employee profile from the dropdown in the header above to get
       try {
         const historyResponse = await hrApi.getChatHistory(employee.id);
 
-        // Set the chat ID from the response
-        setChatId(historyResponse.chatId);
+        // Set the conversation ID from the response
+        setConversationId(historyResponse.conversationId);
 
         // Convert API messages to frontend Message format
         const historyMessages: Message[] = historyResponse.messages.map(msg => ({
@@ -184,7 +184,7 @@ Hello, **${employee.name}**, how can I help you today?`,
 
     try {
       const request: ChatRequest = {
-        chatId: chatId || undefined,
+        conversationId: conversationId || undefined,
         message: inputMessage,
         employeeId: selectedEmployee.id,
         signatures: []
@@ -200,7 +200,7 @@ Hello, **${employee.name}**, how can I help you today?`,
         );
         if (signatureResult.confirmed) {
           await hrApi.signDocument({
-            chatId: response.chatId,
+            conversationId: response.conversationId,
             employeeId: selectedEmployee.id,
             toolId: signature.toolId,
             documentId: signature.documentId,
@@ -216,7 +216,7 @@ Hello, **${employee.name}**, how can I help you today?`,
       // if there are signatures, send them back to the model
       const finalResponse = signatures.length === 0 ? response :
         await hrApi.chat({
-          chatId: request.chatId,
+          conversationId: request.conversationId,
           signatures: signatures,
           message: '',
           employeeId: selectedEmployee.id,
@@ -232,8 +232,8 @@ Hello, **${employee.name}**, how can I help you today?`,
 
       setMessages(prev => [...prev, botMessage]);
 
-      if (finalResponse.chatId) {
-        setChatId(finalResponse.chatId);
+      if (finalResponse.conversationId) {
+        setConversationId(finalResponse.conversationId);
       }
 
     } catch (error) {

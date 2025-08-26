@@ -3,14 +3,14 @@ import axios from 'axios';
 const API_BASE_URL = 'http://localhost:5258/api';
 
 export interface ChatRequest {
-  chatId?: string;
+  conversationId?: string;
   message: string;
   employeeId: string;
   signatures: { toolId: string; content: string }[];
 }
 
 export interface ChatResponse {
-  chatId: string;
+  conversationId: string;
   answer: string;
   followups: string[];
   generatedAt: string;
@@ -26,7 +26,7 @@ export interface SignatureDocumentRequest {
 }
 
 export interface SignDocumentRequest {
-  chatId: string;
+  conversationId: string;
   employeeId: string;
   toolId: string;
   documentId: string;
@@ -42,7 +42,7 @@ export interface ChatMessage {
 }
 
 export interface ChatHistoryResponse {
-  chatId: string;
+  conversationId: string;
   messages: ChatMessage[];
   employeeId: string;
 }

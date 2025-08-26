@@ -1,6 +1,4 @@
 using Raven.Client.Documents;
-using Raven.Client.Documents.Conventions;
-using Raven.Client.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +7,6 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     });
-builder.Services.AddOpenApi();
 
 builder.Services.AddSingleton<IDocumentStore>(provider =>
 {
@@ -18,7 +15,6 @@ builder.Services.AddSingleton<IDocumentStore>(provider =>
         Urls = new[] { "http://localhost:8080" },
         Database = "HRAssistant",
     };
-
     store.Initialize();
     return store;
 });
@@ -35,6 +31,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Create HR Agent on startup
 {
     var store = app.Services.GetRequiredService<IDocumentStore>();
     Console.WriteLine("Creating agent...");
@@ -51,17 +48,8 @@ var app = builder.Build();
     });
 }
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
 app.UseCors();
-
-app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
