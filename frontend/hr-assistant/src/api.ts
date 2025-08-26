@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { fetchEventSource, EventSourceMessage } from '@microsoft/fetch-event-source';
 
 const API_BASE_URL = 'http://localhost:5258/api';
 
@@ -63,8 +64,31 @@ const api = axios.create({
 });
 
 export const hrApi = {
-  chat: (request: ChatRequest): Promise<ChatResponse> =>
-    api.post('/HumanResourcesAgent/chat', request).then(response => response.data),
+
+  chat: (
+    request: ChatRequest,
+    onChunk: (chunk: string) => void
+  ): Promise<ChatResponse> => {
+    return new Promise<ChatResponse>((resolve, reject) => {
+      fetchEventSource(`${API_BASE_URL}/HumanResourcesAgent/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+        onmessage(ev: EventSourceMessage) {
+          if (ev.event === 'final') {
+            resolve(JSON.parse(ev.data));
+          } else {
+            onChunk(ev.data);
+          }
+        },
+        onerror(err: any) {
+          reject(err);
+        },
+      });
+    });
+  },
 
   signDocument: (request: SignDocumentRequest): Promise<any> =>
     api.post('/HumanResourcesAgent/sign-document', request).then(response => response.data),

@@ -21,7 +21,7 @@ namespace HRAssistant.Controllers
         }
 
         [HttpPost("chat")]
-        public async Task<ActionResult<ChatResponse>> Chat([FromBody] ChatRequest request)
+        public async Task Chat([FromBody] ChatRequest request)
         {
             var documentsToSign = new List<SignatureDocumentRequest>();
             var conversationId = request.ConversationId ?? "hr/" + request.EmployeeId + "/" + DateTime.Today.ToString("yyyy-MM-dd");
@@ -80,15 +80,29 @@ namespace HRAssistant.Controllers
                 conversation.SetUserPrompt(request.Message);
             }
 
-            var result = await conversation.RunAsync<HumanResourcesAgent.Reply>();
-            return Ok(new ChatResponse
+            Response.Headers["Content-Type"] = "text/event-stream";
+            await using var writer = new StreamWriter(Response.Body);
+            var result = await conversation.StreamAsync<HumanResourcesAgent.Reply>(x => x.Answer, async chunk =>
+            {
+                await writer.WriteAsync("data: ");
+                await writer.WriteAsync(chunk);
+                await writer.WriteAsync("\n\n");
+                await writer.FlushAsync();
+            });
+
+            // Send the final result as a custom event
+            var finalResponse = new ChatResponse
             {
                 ConversationId = conversation.Id,
                 Answer = result.Answer?.Answer,
                 Followups = result.Answer?.Followups ?? [],
                 GeneratedAt = DateTime.UtcNow,
                 DocumentsToSign = documentsToSign
-            });
+            };
+            await writer.WriteAsync($"event: final\ndata:");
+            await writer.WriteAsync(JsonConvert.SerializeObject(finalResponse));
+            await writer.WriteAsync("\n\n");
+            await writer.FlushAsync();
         }
 
         public record Message(string content, string role, DateTime date);

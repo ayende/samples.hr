@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { hrApi, ChatRequest, ChatResponse, EmployeeDropdown } from '../api';
 import { SignatureDialog } from './SignatureDialog';
 import './ChatInterface.css';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Message {
   id: string;
@@ -183,59 +184,53 @@ Hello, **${employee.name}**, how can I help you today?`,
     setIsLoading(true);
 
     try {
-      const request: ChatRequest = {
+      const requestBody = {
         conversationId: conversationId || undefined,
         message: inputMessage,
         employeeId: selectedEmployee.id,
         signatures: []
       };
-
-      const response: ChatResponse = await hrApi.chat(request);
-      var signatures = [];
-
-      for (const signature of response.documentsToSign) {
-        const signatureResult = await requestSignature(
-          signature.title,
-          signature.content
-        );
-        if (signatureResult.confirmed) {
-          await hrApi.signDocument({
-            conversationId: response.conversationId,
-            employeeId: selectedEmployee.id,
-            toolId: signature.toolId,
-            documentId: signature.documentId,
-            confirmed: signatureResult.confirmed,
-            signatureBlob: signatureResult.signature || undefined
-          });
-          signatures.push({ toolId: signature.toolId, content: 'Signed by employee' });
-        }
-        else {
-          signatures.push({ toolId: signature.toolId, content: 'Employee declined to sign' });
-        }
-      }
-      // if there are signatures, send them back to the model
-      const finalResponse = signatures.length === 0 ? response :
-        await hrApi.chat({
-          conversationId: request.conversationId,
-          signatures: signatures,
-          message: '',
-          employeeId: selectedEmployee.id,
-        });
-
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: finalResponse.answer || "Document processing completed.",
+      let botMessageId = 'placeholder-' + uuidv4();
+      let botText = '';
+      let finalResponse: ChatResponse | null = null;
+      setMessages(prev => [...prev, {
+        id: botMessageId,
+        text: '',
         isUser: false,
         timestamp: new Date(),
-        followups: finalResponse.followups,
-      };
+      }]);
 
-      setMessages(prev => [...prev, botMessage]);
-
-      if (finalResponse.conversationId) {
-        setConversationId(finalResponse.conversationId);
+      try {
+        const response = await hrApi.chat(
+          requestBody,
+          (chunk: string) => {
+            botText += chunk;
+            setMessages(prev => prev.map(m =>
+              m.id === botMessageId ? { ...m, text: botText } : m
+            ));
+          }
+        );
+        finalResponse = response;
+        setMessages(prev => prev.map(m =>
+          m.id === botMessageId ? {
+            ...m,
+            text: finalResponse!.answer || "Document processing completed.",
+            followups: finalResponse!.followups,
+          } : m
+        ));
+        if (finalResponse!.conversationId) {
+          setConversationId(finalResponse!.conversationId);
+        }
+      } catch (err) {
+        setMessages(prev => prev.map(m =>
+          m.id === botMessageId ? {
+            ...m,
+            text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment, or contact IT support if the problem persists.",
+          } : m
+        ));
+      } finally {
+        setIsLoading(false);
       }
-
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage: Message = {
