@@ -2,8 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Raven.Client.Documents;
 using HRAssistant.Models;
 using Raven.Client.Documents.AI;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace HRAssistant.Controllers
 {
@@ -13,11 +12,13 @@ namespace HRAssistant.Controllers
     {
         private readonly IDocumentStore _documentStore;
         private readonly ILogger<HumanResourcesAgentController> _logger;
+        private readonly System.Text.Json.JsonSerializerOptions _jsonOptions;
 
-        public HumanResourcesAgentController(IDocumentStore documentStore, ILogger<HumanResourcesAgentController> logger)
+        public HumanResourcesAgentController(IDocumentStore documentStore, ILogger<HumanResourcesAgentController> logger, Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Mvc.JsonOptions> jsonOptions)
         {
             _documentStore = documentStore;
             _logger = logger;
+            _jsonOptions = jsonOptions.Value.JsonSerializerOptions;
         }
 
         [HttpPost("chat")]
@@ -82,10 +83,10 @@ namespace HRAssistant.Controllers
 
             Response.Headers["Content-Type"] = "text/event-stream";
             await using var writer = new StreamWriter(Response.Body);
-            var result = await conversation.StreamAsync<HumanResourcesAgent.Reply>(x => x.Answer, async chunk =>
+            var result = await conversation.StreamAsync<HumanResourcesAgent.Reply>("Answer", async chunk =>
             {
                 await writer.WriteAsync("data: ");
-                await writer.WriteAsync(chunk);
+                await writer.WriteAsync(JsonSerializer.Serialize(chunk, _jsonOptions));
                 await writer.WriteAsync("\n\n");
                 await writer.FlushAsync();
             });
@@ -99,8 +100,8 @@ namespace HRAssistant.Controllers
                 GeneratedAt = DateTime.UtcNow,
                 DocumentsToSign = documentsToSign
             };
-            await writer.WriteAsync($"event: final\ndata:");
-            await writer.WriteAsync(JsonConvert.SerializeObject(finalResponse));
+            await writer.WriteAsync($"event: final\ndata: ");
+            await writer.WriteAsync(JsonSerializer.Serialize(finalResponse, _jsonOptions));
             await writer.WriteAsync("\n\n");
             await writer.FlushAsync();
         }
@@ -130,7 +131,7 @@ namespace HRAssistant.Controllers
                         Id = conversationId + "#" + i,
                         Text = m.role switch
                         {
-                            "assistant" when m.content.StartsWith("{") => JsonConvert.DeserializeObject<HumanResourcesAgent.Reply>(m.content)!.Answer,
+                            "assistant" when m.content.StartsWith("{") => JsonSerializer.Deserialize<HumanResourcesAgent.Reply>(m.content)!.Answer,
                             _ => m.content,
                         },
                         IsUser = m.role == "user",

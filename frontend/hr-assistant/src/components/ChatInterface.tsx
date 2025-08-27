@@ -11,6 +11,7 @@ interface Message {
   isUser: boolean;
   timestamp: Date;
   followups?: string[];
+  typewriter?: boolean;
 }
 
 export const ChatInterface: React.FC = () => {
@@ -195,27 +196,30 @@ Hello, **${employee.name}**, how can I help you today?`,
       let finalResponse: ChatResponse | null = null;
       setMessages(prev => [...prev, {
         id: botMessageId,
-        text: '',
+        text: '🤔 Processing your request...',
         isUser: false,
         timestamp: new Date(),
+        typewriter: true // custom flag for typewriter effect
       }]);
 
       try {
         const response = await hrApi.chat(
           requestBody,
           (chunk: string) => {
-            botText += chunk;
+            botText += JSON.parse(chunk);
             setMessages(prev => prev.map(m =>
-              m.id === botMessageId ? { ...m, text: botText } : m
+              m.id === botMessageId ? { ...m, text: botText, typewriter: true } : m
             ));
           }
         );
+        console.log(botText);
         finalResponse = response;
         setMessages(prev => prev.map(m =>
           m.id === botMessageId ? {
             ...m,
-            text: finalResponse!.answer || "Document processing completed.",
+            text: finalResponse!.answer || "No answer from the mode.",
             followups: finalResponse!.followups,
+            typewriter: false // remove typewriter effect after completion
           } : m
         ));
         if (finalResponse!.conversationId) {
@@ -226,6 +230,7 @@ Hello, **${employee.name}**, how can I help you today?`,
           m.id === botMessageId ? {
             ...m,
             text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment, or contact IT support if the problem persists.",
+            typewriter: false
           } : m
         ));
       } finally {
@@ -295,7 +300,7 @@ Hello, **${employee.name}**, how can I help you today?`,
 
       <div className="messages-container">
         {messages.map((message) => (
-          <div key={message.id} className={`message-bubble ${message.isUser ? 'user' : 'bot'}`}>
+          <div key={message.id} className={`message-bubble ${message.isUser ? 'user' : 'bot'}${message.typewriter ? ' typewriter' : ''}`}>
             <div className="message-content">
               {message.isUser ? (
                 message.text
@@ -327,12 +332,6 @@ Hello, **${employee.name}**, how can I help you today?`,
             )}
           </div>
         ))}
-
-        {isLoading && (
-          <div className="loading-indicator">
-            <div>🤔 Processing your request...</div>
-          </div>
-        )}
 
         <div ref={messagesEndRef} />
       </div>
