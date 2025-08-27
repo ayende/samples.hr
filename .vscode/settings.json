@@ -1,0 +1,22 @@
+{
+    "typescript.preferences.includePackageJsonAutoImports": "on",
+    "typescript.suggest.autoImports": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/bin": true,
+        "**/obj": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/bin": true,
+        "**/obj": true,
+        "**/build": true
+    },
+    "dotnet.defaultSolution": "backend/HRAssistant/HRAssistant.csproj",
+    "omnisharp.enabled": true,
+    "csharp.format.enable": true,
+    "csharp.semanticHighlighting.enabled": true
+}
