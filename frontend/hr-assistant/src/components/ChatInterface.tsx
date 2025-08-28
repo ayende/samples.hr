@@ -169,12 +169,63 @@ Hello, **${employee.name}**, how can I help you today?`,
     });
   };
 
+  const sendToModel = async (requestBody: ChatRequest, botMessageId: string) => {
+    let botText = '';
+    return await hrApi.chat(
+      requestBody,
+      (chunk: string) => {
+        botText += JSON.parse(chunk);
+        setMessages(prev => prev.map(m =>
+          m.id === botMessageId ? { ...m, text: botText, typewriter: true } : m
+        ));
+      }
+    );
+  };
+
+  const handleSignatures = async (response: ChatResponse, selectedEmployeeId: string): Promise<{ toolId: string; content: string }[]> => {
+    var signatures = [];
+    for (const signature of response.documentsToSign) {
+      const signatureResult = await requestSignature(
+        signature.title,
+        signature.content
+      );
+      if (signatureResult.confirmed) {
+        await hrApi.signDocument({
+          conversationId: response.conversationId,
+          employeeId: selectedEmployeeId,
+          toolId: signature.toolId,
+          documentId: signature.documentId,
+          confirmed: signatureResult.confirmed,
+          signatureBlob: signatureResult.signature || undefined
+        });
+        signatures.push({ toolId: signature.toolId, content: 'Signed by employee' });
+      }
+      else {
+        signatures.push({ toolId: signature.toolId, content: 'Employee declined to sign' });
+      }
+    }
+    return signatures;
+  }
+
+  const interactWithModel = async (requestBody: ChatRequest, botMessageId: string): Promise<ChatResponse> => {
+    while (true) {
+      const response = await sendToModel(requestBody, botMessageId);
+      if (!response.documentsToSign || !response.documentsToSign.length || !selectedEmployee)
+        return response;
+      requestBody = {
+        ...requestBody,
+        message: '',
+        signatures: await handleSignatures(response, selectedEmployee.id)
+      };
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading || !selectedEmployee) return;
 
     // Normal message handling
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: uuidv4(),
       text: inputMessage,
       isUser: true,
       timestamp: new Date(),
@@ -185,15 +236,8 @@ Hello, **${employee.name}**, how can I help you today?`,
     setIsLoading(true);
 
     try {
-      const requestBody = {
-        conversationId: conversationId || undefined,
-        message: inputMessage,
-        employeeId: selectedEmployee.id,
-        signatures: []
-      };
-      let botMessageId = 'placeholder-' + uuidv4();
-      let botText = '';
-      let finalResponse: ChatResponse | null = null;
+
+      let botMessageId = uuidv4();
       setMessages(prev => [...prev, {
         id: botMessageId,
         text: '🤔 Processing your request...',
@@ -203,29 +247,25 @@ Hello, **${employee.name}**, how can I help you today?`,
       }]);
 
       try {
-        const response = await hrApi.chat(
-          requestBody,
-          (chunk: string) => {
-            botText += JSON.parse(chunk);
-            setMessages(prev => prev.map(m =>
-              m.id === botMessageId ? { ...m, text: botText, typewriter: true } : m
-            ));
-          }
-        );
-        console.log(botText);
-        finalResponse = response;
+        let response = await interactWithModel({
+          conversationId: conversationId || undefined,
+          message: inputMessage,
+          employeeId: selectedEmployee.id,
+          signatures: [],
+        }, botMessageId);
         setMessages(prev => prev.map(m =>
           m.id === botMessageId ? {
             ...m,
-            text: finalResponse!.answer || "No answer from the mode.",
-            followups: finalResponse!.followups,
+            text: response!.answer || "No answer from the mode.",
+            followups: response!.followups,
             typewriter: false // remove typewriter effect after completion
           } : m
         ));
-        if (finalResponse!.conversationId) {
-          setConversationId(finalResponse!.conversationId);
+        if (response!.conversationId) {
+          setConversationId(response!.conversationId);
         }
       } catch (err) {
+        console.log(err);
         setMessages(prev => prev.map(m =>
           m.id === botMessageId ? {
             ...m,
