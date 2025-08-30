@@ -28,7 +28,7 @@ public static class HumanResourcesAgent
           {
               Name = "HR Assistant",
               Identifier = "hr-assistant",
-              ConnectionStringName = "HR's Open AI",
+              ConnectionStringName = "Human Resources' AI Model",
               SystemPrompt = @"You are an HR assistant. 
 Provide info on benefits, policies, and departments. 
 Be professional and cheery.
