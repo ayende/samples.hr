@@ -11,7 +11,6 @@ interface Message {
   isUser: boolean;
   timestamp: Date;
   followups?: string[];
-  typewriter?: boolean;
 }
 
 export const ChatInterface: React.FC = () => {
@@ -176,7 +175,7 @@ Hello, **${employee.name}**, how can I help you today?`,
       (chunk: string) => {
         botText += JSON.parse(chunk);
         setMessages(prev => prev.map(m =>
-          m.id === botMessageId ? { ...m, text: botText, typewriter: true } : m
+          m.id === botMessageId ? { ...m, text: botText } : m
         ));
       }
     );
@@ -243,7 +242,6 @@ Hello, **${employee.name}**, how can I help you today?`,
         text: '🤔 Processing your request...',
         isUser: false,
         timestamp: new Date(),
-        typewriter: true // custom flag for typewriter effect
       }]);
 
       try {
@@ -258,7 +256,6 @@ Hello, **${employee.name}**, how can I help you today?`,
             ...m,
             text: response!.answer || "No answer from the mode.",
             followups: response!.followups,
-            typewriter: false // remove typewriter effect after completion
           } : m
         ));
         if (response!.conversationId) {
@@ -270,7 +267,6 @@ Hello, **${employee.name}**, how can I help you today?`,
           m.id === botMessageId ? {
             ...m,
             text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment, or contact IT support if the problem persists.",
-            typewriter: false
           } : m
         ));
       } finally {
@@ -340,12 +336,12 @@ Hello, **${employee.name}**, how can I help you today?`,
 
       <div className="messages-container">
         {messages.map((message) => (
-          <div key={message.id} className={`message-bubble ${message.isUser ? 'user' : 'bot'}${message.typewriter ? ' typewriter' : ''}`}>
+          <div key={message.id} className={`message-bubble ${message.isUser ? 'user' : 'bot'}`}>
             <div className="message-content">
               {message.isUser ? (
                 message.text
               ) : (
-                <ReactMarkdown>{message.text}</ReactMarkdown>
+                  <ReactMarkdown>{message.text}</ReactMarkdown>
               )}
             </div>
 

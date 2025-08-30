@@ -1,14 +1,3 @@
-.typewriter .message-content {
-    overflow: hidden;
-    border-right: 2px solid #800080;
-    animation: typewriter-cursor 1s steps(1) infinite;
-}
-
-@keyframes typewriter-cursor {
-    0% { border-right-color: #800080; }
-    50% { border-right-color: transparent; }
-    100% { border-right-color: #800080; }
-}
 /* ChatInterface Styles */
 
 .chat-container {
